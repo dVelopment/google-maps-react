@@ -39,6 +39,9 @@ export const wrapper = input => WrappedComponent => {
     constructor(props, context) {
       super(props, context);
 
+      // detect unmounting
+      this.unmounted = false;
+
       // Build options from input
       const options = typeof input === 'function' ? input(props) : input;
 
@@ -73,11 +76,17 @@ export const wrapper = input => WrappedComponent => {
 
       // Save new options in component state,
       // and remove information about previous API handlers
-      this.setState({
-        options: options,
-        loaded: false,
-        google: null
-      });
+      if (!this.unmounted) {
+        this.setState({
+          options: options,
+          loaded: false,
+          google: null
+        });
+        }
+    }
+
+    componentWillUnmount() {
+      this.unmounted = true;
     }
 
     initialize(options) {
@@ -103,7 +112,9 @@ export const wrapper = input => WrappedComponent => {
     onLoad(err, tag) {
       this._gapi = window.google;
 
-      this.setState({loaded: true, google: this._gapi});
+      if (!this.unmounted) {
+        this.setState({loaded: true, google: this._gapi});
+      }
     }
 
     render() {
