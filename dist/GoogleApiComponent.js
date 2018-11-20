@@ -126,9 +126,12 @@
         function Wrapper(props, context) {
           _classCallCheck(this, Wrapper);
 
-          // Build options from input
+          // detect unmounting
           var _this = _possibleConstructorReturn(this, (Wrapper.__proto__ || Object.getPrototypeOf(Wrapper)).call(this, props, context));
 
+          _this.unmounted = false;
+
+          // Build options from input
           var options = typeof input === 'function' ? input(props) : input;
 
           // Initialize required Google scripts and other configured options
@@ -165,11 +168,18 @@
 
             // Save new options in component state,
             // and remove information about previous API handlers
-            this.setState({
-              options: options,
-              loaded: false,
-              google: null
-            });
+            if (!this.unmounted) {
+              this.setState({
+                options: options,
+                loaded: false,
+                google: null
+              });
+            }
+          }
+        }, {
+          key: 'componentWillUnmount',
+          value: function componentWillUnmount() {
+            this.unmounted = true;
           }
         }, {
           key: 'initialize',
@@ -195,7 +205,9 @@
           value: function onLoad(err, tag) {
             this._gapi = window.google;
 
-            this.setState({ loaded: true, google: this._gapi });
+            if (!this.unmounted) {
+              this.setState({ loaded: true, google: this._gapi });
+            }
           }
         }, {
           key: 'render',
